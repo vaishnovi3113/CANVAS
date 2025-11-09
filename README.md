@@ -12,6 +12,7 @@ A real-time multi-user drawing application where multiple people can draw simult
 - **Touch Support**: Works on mobile devices with touch drawing support
 - **User Management**: Shows online users with color-coded indicators
 
+### DEPLOYED DEMO LINK - https://canvas-production-30e0.up.railway.app/
 ## Setup Instructions
 
 ### Prerequisites
