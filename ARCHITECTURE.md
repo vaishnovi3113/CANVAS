@@ -9,12 +9,12 @@ This document provides a detailed technical overview of the Collaborative Canvas
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         User Actions                            │
-│  (Mouse/Touch Events, Tool Selection, Undo/Redo, Clear)        │
+│  (Mouse/Touch Events, Tool Selection, Undo/Redo, Clear)         │
 └──────────────────────────┬──────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Canvas Manager                               │
+│                     Canvas Manager                              │
 │  • Handles local drawing operations                             │
 │  • Manages operation history (operations array)                 │
 │  • Provides undo/redo stack management                          │
@@ -23,7 +23,7 @@ This document provides a detailed technical overview of the Collaborative Canvas
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                  WebSocket Manager (Client)                      │
+│                  WebSocket Manager (Client)                     │
 │  • Emits drawing events to server                               │
 │  • Listens for remote drawing events                            │
 │  • Manages cursor position updates                              │
@@ -33,7 +33,7 @@ This document provides a detailed technical overview of the Collaborative Canvas
                            ▼ WebSocket Connection (Socket.io)
                            │
 ┌─────────────────────────────────────────────────────────────────┐
-│                   Socket.io Server                               │
+│                   Socket.io Server                              │
 │  • Broadcasts drawing events to all clients                     │
 │  • Maintains global operation history                           │
 │  • Manages connected users and their states                     │
@@ -42,27 +42,11 @@ This document provides a detailed technical overview of the Collaborative Canvas
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                   Server State Store                             │
+│                   Server State Store                            │
 │  • operations: Array of all drawing operations                  │
-│  • users: Map of connected users (id, color, cursor)           │
+│  • users: Map of connected users (id, color, cursor)            │
 └─────────────────────────────────────────────────────────────────┘
 ```
-
-### Event Flow Examples
-
-**Drawing Flow:**
-1. User starts drawing → `mousedown` event
-2. Canvas Manager starts path tracking
-3. WebSocket Manager emits `draw:start` to server
-4. Server broadcasts `draw:start` to all other clients
-5. User moves mouse → `mousemove` events
-6. Canvas Manager draws locally + WebSocket emits `draw:move`
-7. Server broadcasts each `draw:move` to other clients
-8. Remote clients draw in real-time
-9. User releases mouse → `mouseup` event
-10. Canvas Manager stores operation + emits `draw:end`
-11. Server adds operation to global history + broadcasts
-
 ## WebSocket Protocol
 
 ### Client → Server Events
@@ -166,28 +150,6 @@ canvasManager.undoOperation(operationId) {
 4. **Server** adds operation back to global operations array
 5. **Server** broadcasts `operation:redo` to ALL clients
 6. **All clients** add operation and redraw
-
-### Trade-offs
-
-**Advantages:**
-- Simple to implement and reason about
-- Guarantees consistency across all clients
-- No complex conflict resolution needed
-
-**Disadvantages:**
-- User A can undo User B's work (global undo, not per-user)
-- No granular control over individual strokes
-- Potential confusion when multiple users use undo simultaneously
-
-**Considered Alternatives:**
-- **Per-user undo stacks**: More intuitive but complex conflict resolution
-- **Operation tagging**: Tag operations by user, but increases complexity
-- **Time-based undo**: Undo last N seconds, but harder to implement
-
-**Why global undo was chosen:**
-- Matches the assignment requirements for "tricky" undo/redo
-- Demonstrates understanding of distributed state management
-- Simpler implementation for MVP
 
 ## Performance Decisions
 
@@ -325,29 +287,6 @@ ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-o
 - Clients apply operations in received order, not drawn order
 - Timestamps used for operation IDs but not for ordering
 
-**Future Enhancement**: Implement **Operational Transformation (OT)** or **Conflict-Free Replicated Data Types (CRDTs)** for more sophisticated conflict resolution.
-
-## Code Organization
-
-### Separation of Concerns
-
-| Module | Responsibility |
-|--------|----------------|
-| `canvas.js` | Canvas rendering, path tracking, local state |
-| `websocket.js` | Socket.io client, event emission/handling |
-| `main.js` | Application initialization, UI event handlers |
-| `server.js` | Express server, Socket.io server, global state |
-
-### Why No Frameworks?
-
-Per assignment requirements:
-- Demonstrates raw **Canvas API** mastery
-- Shows understanding of **WebSocket** protocols
-- Proves **vanilla JavaScript** skills
-- Reduces complexity for technical evaluation
-
-## Scalability Considerations
-
 ### Current Limitations
 
 1. **Single Server**: No horizontal scaling
@@ -355,76 +294,3 @@ Per assignment requirements:
 3. **No Authentication**: Anyone can join
 4. **No Room System**: All users share one canvas
 
-### Production Architecture (Not Implemented)
-
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Client    │────▶│  WebSocket  │────▶│   Canvas    │
-│   Browser   │◀────│   Gateway   │◀────│   Service   │
-└─────────────┘     └─────────────┘     └─────────────┘
-                           │                     │
-                           ▼                     ▼
-                    ┌─────────────┐     ┌─────────────┐
-                    │    Redis    │     │  PostgreSQL │
-                    │   (PubSub)  │     │  (Storage)  │
-                    └─────────────┘     └─────────────┘
-```
-
-**Improvements:**
-- **Redis PubSub** for multi-server synchronization
-- **PostgreSQL** for operation persistence
-- **Microservices** for canvas, user, and room management
-- **CDN** for static asset delivery
-- **Load Balancer** for horizontal scaling
-
-## Testing Strategy
-
-### Manual Testing
-
-1. **Single User**: Verify all drawing tools work correctly
-2. **Multiple Windows**: Test real-time synchronization
-3. **Network Simulation**: Throttle connection to test latency handling
-4. **Stress Test**: Multiple users drawing simultaneously
-5. **Edge Cases**: Rapid undo/redo, clearing during drawing
-
-### Automated Testing (Not Implemented)
-
-**Recommended tests:**
-- Unit tests for Canvas Manager methods
-- Integration tests for WebSocket events
-- End-to-end tests with multiple simulated clients
-- Performance tests for operation history growth
-
-## Future Enhancements
-
-1. **User Authentication**: Login system with user profiles
-2. **Room System**: Multiple isolated canvases
-3. **Shapes & Text**: Additional drawing tools
-4. **Image Import**: Upload and draw on images
-5. **Export**: Save canvas as PNG/SVG
-6. **History Playback**: Replay entire drawing session
-7. **Per-User Undo**: Separate undo stacks per user
-8. **Collaborative Cursors**: See what tool others are using
-9. **Chat System**: Text communication between users
-10. **Persistence**: Save and load canvas sessions
-
-## Performance Metrics
-
-### Measured Performance
-
-- **Drawing Latency**: ~20-50ms on localhost
-- **Canvas Redraw**: ~5ms for 100 operations
-- **Memory Usage**: ~2MB per 1000 operations
-- **Network Bandwidth**: ~1KB/sec per active drawing user
-
-### Optimization Opportunities
-
-1. **Binary Protocol**: Replace JSON with binary format (ArrayBuffer)
-2. **Delta Compression**: Send only changed pixels
-3. **Web Workers**: Offload redraw to background thread
-4. **Canvas Layers**: Separate static and active layers
-5. **Lazy Rendering**: Only render visible strokes
-
----
-
-This architecture prioritizes **simplicity** and **clarity** for evaluation purposes while demonstrating understanding of production-level concerns.
