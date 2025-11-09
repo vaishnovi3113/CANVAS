@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaborative Canvas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="room-modal" class="modal">
+    <div class="modal-content">
+      <h2>Join a Room</h2>
+      <input type="text" id="room-input" placeholder="Enter room name (or leave empty for default)" />
+      <button id="join-btn">Join Room</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <header class="header">
+      <h1>Collaborative Canvas</h1>
+      <div class="room-info">
+        <span class="room-label">Room:</span>
+        <span id="room-name" class="room-name">-</span>
+        <button id="change-room-btn" class="change-room-btn" title="Change Room">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11L12 14L22 4"></path>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="users-panel">
+        <span class="users-label">Online:</span>
+        <div id="users-list" class="users-list"></div>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="tool-group">
+        <button id="brush-tool" class="tool-btn active" title="Brush">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+          </svg>
+        </button>
+        <button id="eraser-tool" class="tool-btn" title="Eraser">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 20H7L3 16L12 7L21 16Z"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="tool-group">
+        <label class="tool-label">
+          Color:
+          <input type="color" id="color-picker" value="#000000">
+        </label>
+      </div>
+
+      <div class="tool-group">
+        <label class="tool-label">
+          Width:
+          <input type="range" id="stroke-width" min="1" max="50" value="5">
+          <span id="width-value">5</span>px
+        </label>
+      </div>
+
+      <div class="tool-group">
+        <button id="undo-btn" class="tool-btn" title="Undo (Ctrl+Z)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 7v6h6"></path>
+            <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
+          </svg>
+        </button>
+        <button id="redo-btn" class="tool-btn" title="Redo (Ctrl+Y)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 7v6h-6"></path>
+            <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"></path>
+          </svg>
+        </button>
+        <button id="clear-btn" class="tool-btn" title="Clear Canvas">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="tool-group">
+        <div class="status" id="status">Connecting...</div>
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="canvas"></canvas>
+      <div id="cursors-container" class="cursors-container"></div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
